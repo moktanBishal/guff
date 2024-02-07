@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSocket Chat</title>
+</head>
+
+<body>
+  <div id="chatContainer"></div>
+  <input type="text" id="nicknameInput" placeholder="Set your nickname">
+  <button onclick="setNickname()">Set Nickname</button>
+  <textarea id="messageInput" placeholder="Type your message..."></textarea>
+  <button onclick="sendMessage()">Send</button>
+
+  <script>
+    const chatContainer = document.getElementById('chatContainer');
+    const nicknameInput = document.getElementById('nicknameInput');
+    const messageInput = document.getElementById('messageInput');
+    const ws = new WebSocket('ws://192.168.1.64:3000');
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      if (data.type === 'chatMessage') {
+        displayChatMessage(`${data.sender}: ${data.message}`);
+      } else if (data.type === 'systemMessage') {
+        displaySystemMessage(data.message);
+      }
+    };
+
+    function setNickname() {
+      const nickname = nicknameInput.value.trim();
+      if (nickname !== '') {
+        ws.send(JSON.stringify({ type: 'setNickname', nickname }));
+        nicknameInput.disabled = true;
+      }
+    }
+
+    function sendMessage() {
+      const message = messageInput.value.trim();
+      if (message !== '') {
+        ws.send(JSON.stringify({ type: 'chatMessage', message }));
+        messageInput.value = '';
+      }
+    }
+
+    function displayChatMessage(message) {
+      const messageElement = document.createElement('p');
+      messageElement.textContent = message;
+      chatContainer.appendChild(messageElement);
+    }
+
+    function displaySystemMessage(message) {
+      const systemMessageElement = document.createElement('p');
+      systemMessageElement.style.fontStyle = 'italic';
+      systemMessageElement.textContent = message;
+      chatContainer.appendChild(systemMessageElement);
+    }
+  </script>
+</body>
+
+</html>
